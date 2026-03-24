@@ -16,43 +16,20 @@ interface PlaneWaveProps {
 
 const Z_RANGE = 14
 const Z_STEP  = 1.4
-
-function Arrow({
-  color,
-  headLength = 0.28,
-  headWidth  = 0.13,
-}: {
-  color: number
-  headLength?: number
-  headWidth?: number
-}) {
-  const ref = useRef<THREE.ArrowHelper>(null!)
-  useEffect(() => {
-    ref.current = new THREE.ArrowHelper(
-      new THREE.Vector3(0, 1, 0),
-      new THREE.Vector3(0, 0, 0),
-      1,
-      color,
-      headLength,
-      headWidth
-    )
-  }, [color, headLength, headWidth])
-  return null
-}
-
 const CURVE_POINTS = 100
 
 export default function PlaneWave({ time, freq, amp, showE, showB, showS, showA }: PlaneWaveProps) {
   const groupRef = useRef<THREE.Group>(null!)
-  const curveRef = useRef<THREE.Line>(null!)
+  const curveRef = useRef<THREE.Line | null>(null)
 
   const curveZPositions = useMemo(() => {
-    const arr = []
+    const arr: number[] = []
     for (let i = 0; i <= CURVE_POINTS; i++) {
       arr.push(-Z_RANGE / 2 + (Z_RANGE * i) / CURVE_POINTS)
     }
     return arr
   }, [])
+
   const curveInitialPositions = useMemo(() => new Float32Array((CURVE_POINTS + 1) * 3), [])
 
   // Build arrow helpers once
@@ -75,18 +52,29 @@ export default function PlaneWave({ time, freq, amp, showE, showB, showS, showA 
     return { eArrows, bArrows, sArrows }
   }, [])
 
-  // Add arrows to scene on mount
+  // Add arrows and curve line imperatively — avoids <line> JSX (conflicts with SVGLineElement in TS)
   useEffect(() => {
     const g = groupRef.current
     arrows.eArrows.forEach(({ arrow }) => g.add(arrow))
     arrows.bArrows.forEach(({ arrow }) => g.add(arrow))
     arrows.sArrows.forEach(({ arrow }) => g.add(arrow))
+
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(curveInitialPositions, 3))
+    const mat = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2 })
+    const curveLine = new THREE.Line(geo, mat)
+    curveRef.current = curveLine
+    g.add(curveLine)
+
     return () => {
       arrows.eArrows.forEach(({ arrow }) => g.remove(arrow))
       arrows.bArrows.forEach(({ arrow }) => g.remove(arrow))
       arrows.sArrows.forEach(({ arrow }) => g.remove(arrow))
+      g.remove(curveLine)
+      geo.dispose()
+      mat.dispose()
     }
-  }, [arrows])
+  }, [arrows, curveInitialPositions])
 
   useFrame(() => {
     arrows.eArrows.forEach(({ arrow, z }) => {
@@ -118,34 +106,21 @@ export default function PlaneWave({ time, freq, amp, showE, showB, showS, showA 
       arrow.setLength(Math.min(sLen, 1.8), 0.3, 0.16)
     })
 
-    if (curveRef.current) {
-      curveRef.current.visible = showA
+    const curve = curveRef.current
+    if (curve) {
+      curve.visible = showA
       if (showA) {
-        const positions = curveRef.current.geometry.attributes.position.array as Float32Array
+        const positions = curve.geometry.attributes.position.array as Float32Array
         curveZPositions.forEach((z, i) => {
           const A = planeWaveE(z, time - Math.PI / (2 * freq), freq, amp)
           positions[i * 3] = A.x
           positions[i * 3 + 1] = A.y
           positions[i * 3 + 2] = z
         })
-        curveRef.current.geometry.attributes.position.needsUpdate = true
+        curve.geometry.attributes.position.needsUpdate = true
       }
     }
   })
 
-  return (
-    <group ref={groupRef}>
-      <line ref={curveRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={CURVE_POINTS + 1}
-            array={curveInitialPositions}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={0x00ff00} linewidth={2} />
-      </line>
-    </group>
-  )
+  return <group ref={groupRef} />
 }

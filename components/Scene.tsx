@@ -5,6 +5,24 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 
+// ─── Axis lines (uses primitive to avoid <line> → SVGLineElement TS conflict) ─
+function AxisLines() {
+  const lines = useMemo(() => [
+    { p1: [-9, 0, 0] as const, p2: [9, 0, 0] as const, color: 0x1a2244 },
+    { p1: [0, -5, 0] as const, p2: [0, 5, 0] as const, color: 0x1a2244 },
+    { p1: [0, 0, -9] as const, p2: [0, 0, 9] as const, color: 0x334488 },
+  ].map(({ p1, p2, color }) => {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(...p1),
+      new THREE.Vector3(...p2),
+    ]);
+    const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.4 });
+    return new THREE.Line(geo, mat);
+  }), []);
+
+  return <>{lines.map((l, i) => <primitive key={i} object={l} />)}</>;
+}
+
 import PlaneWave from "./PlaneWave";
 import StandingWave from "./StandingWave";
 import DipoleField from "./DipoleField";
@@ -205,42 +223,7 @@ export default function Scene() {
             />
 
             {/* Axis lines */}
-            <group>
-              {[
-                {
-                  pts: [
-                    [-9, 0, 0],
-                    [9, 0, 0],
-                  ],
-                  color: 0x1a2244,
-                },
-                {
-                  pts: [
-                    [0, -5, 0],
-                    [0, 5, 0],
-                  ],
-                  color: 0x1a2244,
-                },
-                {
-                  pts: [
-                    [0, 0, -9],
-                    [0, 0, 9],
-                  ],
-                  color: 0x334488,
-                },
-              ].map(({ pts, color }, i) => (
-                <line key={i}>
-                  <bufferGeometry
-                    onUpdate={(self) =>
-                      self.setFromPoints(
-                        pts.map((p) => new THREE.Vector3(p[0], p[1], p[2])),
-                      )
-                    }
-                  />
-                  <lineBasicMaterial color={color} transparent opacity={0.4} />
-                </line>
-              ))}
-            </group>
+            <AxisLines />
 
             {/* Field components — only render active mode */}
             {mode === "plane" && (
