@@ -405,7 +405,7 @@ export default function ControlPanel(props: Props) {
             textTransform: "uppercase",
           }}
         >
-          Maxwell's Equations
+          Maxwell&apos;s Equations
         </div>
         {MAXWELL.map((eq, i) => {
           const active = eq.modes.includes(mode);
