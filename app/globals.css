@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg:         #03050d;
+  --bg2:        #070a18;
+  --bg3:        #0c1028;
+  --border:     rgba(80,140,255,0.15);
+  --border-hi:  rgba(80,140,255,0.4);
+  --blue:       #4a9eff;
+  --orange:     #ff8c3a;
+  --green:      #3affb0;
+  --pink:       #ff4a7a;
+  --purple:     #c084ff;
+  --text:       rgba(200,220,255,0.92);
+  --text2:      rgba(140,170,220,0.6);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Range slider */
+input[type='range'] {
+  width: 100%;
+  height: 3px;
+  -webkit-appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid var(--bg2);
+  cursor: pointer;
+}
+input[type='range']::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid var(--bg2);
+  cursor: pointer;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: rgba(80,140,255,0.2); border-radius: 2px; }
